@@ -27,15 +27,35 @@ export default function SummaryPage() {
   const load = async () => {
     if (!profile?.household_id) return;
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("expenses")
-      .select("category_id, categories(name, color), total:amount.sum()")
+      .select("amount, category_id, categories(name, color)")
       .gte("date", startDate)
-      .lte("date", endDate)
-      .group("category_id, categories(name), categories(color)")
-      .order("total", { ascending: false });
+      .lte("date", endDate);
 
-    setRows((data as CategorySummary[]) ?? []);
+    if (error || !data) {
+      setRows([]);
+      setLoading(false);
+      return;
+    }
+
+    const grouped = data.reduce<Record<string, CategorySummary>>((acc, row) => {
+      const key = row.category_id;
+      const current = acc[key] ?? {
+        category_id: key,
+        categories: row.categories ?? null,
+        total: 0,
+      };
+      current.total += Number(row.amount || 0);
+      acc[key] = current;
+      return acc;
+    }, {});
+
+    const aggregated = Object.values(grouped).sort(
+      (a, b) => Number(b.total) - Number(a.total),
+    );
+
+    setRows(aggregated);
     setLoading(false);
   };
 
