@@ -12,6 +12,7 @@ import {
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Database } from "@/../supabase/types";
+import { defaultCategories, defaultWallets } from "@/lib/seeds";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -38,12 +39,50 @@ export const SupabaseProvider = ({ children }: { children: ReactNode }) => {
       setProfile(null);
       return;
     }
-    const { data } = await supabase
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, household_id, created_at")
+      .eq("id", session.user.id)
+      .maybeSingle();
+
+    if (existing) {
+      setProfile(existing as Profile);
+      return;
+    }
+
+    // Autocreazione profilo/household se mancante
+    const { data: household } = await supabase
+      .from("households")
+      .insert({ name: session.user.user_metadata?.household_name ?? "Casa" })
+      .select("id")
+      .single();
+
+    if (!household) {
+      setProfile(null);
+      return;
+    }
+
+    await supabase.from("profiles").upsert({
+      id: session.user.id,
+      household_id: household.id,
+      full_name: session.user.user_metadata?.full_name ?? session.user.email,
+      email: session.user.email,
+    });
+
+    await supabase
+      .from("wallets")
+      .insert(defaultWallets.map((w) => ({ ...w, household_id: household.id })));
+    await supabase
+      .from("categories")
+      .insert(defaultCategories.map((c) => ({ ...c, household_id: household.id })));
+
+    const { data: fresh } = await supabase
       .from("profiles")
       .select("id, full_name, email, household_id, created_at")
       .eq("id", session.user.id)
       .single();
-    setProfile((data as Profile) ?? null);
+
+    setProfile((fresh as Profile) ?? null);
   }, [session, supabase]);
 
   useEffect(() => {
