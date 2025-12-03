@@ -40,7 +40,7 @@ export const SupabaseProvider = ({ children }: { children: ReactNode }) => {
     }
     const { data } = await supabase
       .from("profiles")
-      .select("*")
+      .select<Profile>("*")
       .eq("id", session.user.id)
       .single();
     setProfile(data ?? null);
