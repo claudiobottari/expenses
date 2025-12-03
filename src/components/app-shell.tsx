@@ -6,7 +6,6 @@ import {
   BarChart3,
   Home,
   ListChecks,
-  Menu,
   PlusCircle,
   Settings,
   Wallet,
@@ -33,10 +32,6 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
           <div className="hidden rounded-full border border-white/10 px-3 py-1 text-xs text-gray-300 sm:block">
             PWA familiare
           </div>
-        </div>
-        <div className="hidden items-center gap-3 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-200 shadow-sm sm:flex">
-          <Menu size={16} />
-          Navigazione rapida
         </div>
       </header>
 
