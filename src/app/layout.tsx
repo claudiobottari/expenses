@@ -16,6 +16,9 @@ export const metadata: Metadata = {
     "PWA minimale per tracciare le spese familiari con Supabase + Next.js",
   metadataBase: new URL("https://expenses.vercel.app"),
   manifest: "/manifest.json",
+};
+
+export const viewport = {
   themeColor: "#0f766e",
 };
 
