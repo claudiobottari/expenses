@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSupabase } from "@/components/providers/supabase-provider";
 
@@ -71,12 +70,6 @@ export default function LoginPage() {
           {loading ? "Accesso in corso..." : "Accedi"}
         </button>
       </form>
-      <p className="mt-4 text-sm text-gray-300">
-        Non hai un account?{" "}
-        <Link href="/register" className="text-teal-200 underline">
-          Registrati
-        </Link>
-      </p>
     </div>
   );
 }

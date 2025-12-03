@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
   createContext,
   useCallback,
@@ -8,9 +9,11 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { ReactNode } from "react";
-import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
-import type { Database, Profile } from "@/lib/types";
+import type { Session, SupabaseClient } from "@supabase/supabase-js";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { Database } from "@/../supabase/types";
+
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 type SupabaseContextValue = {
   supabase: SupabaseClient<Database>;
@@ -24,28 +27,8 @@ const SupabaseContext = createContext<SupabaseContextValue | undefined>(
   undefined,
 );
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-const createBrowserSupabaseClient = () => {
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY sono obbligatori",
-    );
-  }
-
-  return createClient<Database>(supabaseUrl, supabaseKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  });
-};
-
 export const SupabaseProvider = ({ children }: { children: ReactNode }) => {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);

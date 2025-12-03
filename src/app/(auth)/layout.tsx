@@ -11,12 +11,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur">
         <div className="mb-6 flex items-center justify-between">
           <Logo />
-          <Link
-            href={pathname === "/login" ? "/register" : "/login"}
-            className="text-sm font-medium text-teal-200 underline"
-          >
-            {pathname === "/login" ? "Registrati" : "Accedi"}
-          </Link>
+          {pathname === "/register" ? (
+            <Link
+              href="/login"
+              className="text-sm font-medium text-teal-200 underline"
+            >
+              Accedi
+            </Link>
+          ) : null}
         </div>
         {children}
       </div>
