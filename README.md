@@ -5,7 +5,7 @@ PWA minimale per registrare e rivedere le spese familiari. Stack: Next.js (App R
 ## Prerequisiti
 
 - Node 18+
-- Account Supabase con il progetto `kjxlxgibhgfirpwqqybm`
+- Account Supabase con il progetto `xxxx`
 - Variabili ambiente configurate
 
 ## Setup locale
@@ -20,8 +20,8 @@ npm run dev
 
 Variabili richieste in `.env.local` (e in Vercel):
 
-- `NEXT_PUBLIC_SUPABASE_URL=https://kjxlxgibhgfirpwqqybm.supabase.co`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY=...` (anon key del progetto)
+- `NEXT_PUBLIC_SUPABASE_URL=https://___.supabase.co`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_`
 
 ## Flussi principali
 
@@ -68,7 +68,7 @@ Oppure incolla il contenuto di `supabase/schema.sql` nella SQL editor di Supabas
 ## Deploy su Vercel
 
 1. Connetti il repository GitHub a Vercel.
-2. Imposta le env vars del progetto Vercel (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
+2. Imposta le env vars del progetto Vercel (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`).
 3. Deploy automatico da `main`. Nessuna build step custom oltre a `npm run build`.
 
 ## Note PWA
