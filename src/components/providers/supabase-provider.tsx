@@ -46,8 +46,38 @@ export const SupabaseProvider = ({ children }: { children: ReactNode }) => {
       .maybeSingle();
 
     if (existing) {
-      setProfile(existing as Profile);
-      return;
+      if (!existing.household_id) {
+        const { data: newHouse } = await supabase
+          .from("households")
+          .insert({ name: existing.full_name ?? existing.email ?? "Casa" })
+          .select("id")
+          .single();
+
+        if (newHouse?.id) {
+          await supabase
+            .from("profiles")
+            .update({ household_id: newHouse.id })
+            .eq("id", existing.id);
+
+          await supabase
+            .from("wallets")
+            .insert(defaultWallets.map((w) => ({ ...w, household_id: newHouse.id })));
+          await supabase
+            .from("categories")
+            .insert(defaultCategories.map((c) => ({ ...c, household_id: newHouse.id })));
+
+          const { data: refreshed } = await supabase
+            .from("profiles")
+            .select("id, full_name, email, household_id, created_at")
+            .eq("id", session.user.id)
+            .single();
+          setProfile((refreshed as Profile) ?? null);
+          return;
+        }
+      } else {
+        setProfile(existing as Profile);
+        return;
+      }
     }
 
     // Autocreazione profilo/household se mancante
