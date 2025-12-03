@@ -28,6 +28,21 @@ export default function LoginPage() {
     router.replace("/dashboard");
   };
 
+  const handleGoogle = async () => {
+    setError(null);
+    const redirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/auth/callback`
+        : undefined;
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo },
+    });
+    if (authError) {
+      setError(authError.message);
+    }
+  };
+
   return (
     <div>
       <div className="mb-6">
@@ -70,6 +85,15 @@ export default function LoginPage() {
           {loading ? "Accesso in corso..." : "Accedi"}
         </button>
       </form>
+      <div className="mt-6">
+        <button
+          type="button"
+          onClick={handleGoogle}
+          className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center font-semibold text-white transition hover:border-teal-400 hover:text-teal-50"
+        >
+          Accedi con Google
+        </button>
+      </div>
     </div>
   );
 }
