@@ -14,8 +14,7 @@ import { Logo } from "./ui/logo";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/expenses", label: "Spese", icon: PlusCircle },
-  { href: "/summary", label: "Riepilogo", icon: BarChart3 },
+  { href: "/expenses", label: "Storico", icon: BarChart3 },
   { href: "/categories", label: "Categorie", icon: ListChecks },
   { href: "/wallets", label: "Portafogli", icon: Wallet },
   { href: "/settings", label: "Profilo", icon: Settings },
@@ -44,9 +43,8 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-1 flex-col items-center gap-1 rounded-xl px-2 py-1 text-xs font-medium transition ${
-                active ? "bg-white/10 text-white" : "text-gray-300 hover:text-white"
-              }`}
+              className={`flex flex-1 flex-col items-center gap-1 rounded-xl px-2 py-1 text-xs font-medium transition ${active ? "bg-white/10 text-white" : "text-gray-300 hover:text-white"
+                }`}
             >
               <item.icon size={20} />
               <span>{item.label}</span>

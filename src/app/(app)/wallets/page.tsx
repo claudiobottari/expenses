@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { Wallet2 } from "lucide-react";
+import { Trash2, Wallet2 } from "lucide-react";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import type { Wallet } from "@/lib/types";
 
@@ -10,7 +10,6 @@ export default function WalletsPage() {
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [form, setForm] = useState({
     name: "",
-    currency: "EUR",
   });
   const [saving, setSaving] = useState(false);
 
@@ -34,10 +33,11 @@ export default function WalletsPage() {
     setSaving(true);
     await supabase.from("wallets").insert({
       ...form,
+      currency: "EUR",
       is_active: true,
       household_id: profile.household_id,
     });
-    setForm({ name: "", currency: "EUR" });
+    setForm({ name: "" });
     await load();
     setSaving(false);
   };
@@ -49,6 +49,23 @@ export default function WalletsPage() {
       .update({ is_active: !wallet.is_active })
       .eq("id", wallet.id);
     await load();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!profile?.household_id) return;
+    if (!window.confirm("Eliminare questo portafoglio?")) return;
+
+    const { error } = await supabase
+      .from("wallets")
+      .delete()
+      .eq("id", id)
+      .eq("household_id", profile.household_id);
+
+    if (error) {
+      alert("Impossibile eliminare: " + error.message);
+    } else {
+      await load();
+    }
   };
 
   if (!profile?.household_id) {
@@ -76,21 +93,11 @@ export default function WalletsPage() {
               onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
             />
           </label>
-          <label className="space-y-1 md:col-span-1">
-            <span className="text-sm text-gray-200">Valuta</span>
-            <input
-              className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white outline-none focus:border-teal-400"
-              value={form.currency}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, currency: e.target.value.toUpperCase() }))
-              }
-            />
-          </label>
-          <div className="md:col-span-3 md:flex md:justify-end">
+          <div className="md:col-span-1 md:flex md:justify-end md:items-end">
             <button
               type="submit"
               disabled={saving}
-              className="rounded-xl bg-teal-500 px-4 py-2 font-semibold text-white shadow-lg shadow-teal-500/30 transition hover:bg-teal-400 disabled:opacity-60"
+              className="w-full rounded-xl bg-teal-500 px-4 py-2 font-semibold text-white shadow-lg shadow-teal-500/30 transition hover:bg-teal-400 disabled:opacity-60"
             >
               {saving ? "Salvo..." : "Aggiungi"}
             </button>
@@ -118,14 +125,22 @@ export default function WalletsPage() {
                     <p className="text-xs text-gray-400">{wallet.currency}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => toggle(wallet)}
-                  className={`text-xs font-semibold ${
-                    wallet.is_active ? "text-teal-100" : "text-gray-400"
-                  }`}
-                >
-                  {wallet.is_active ? "Attivo" : "Disattivato"}
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => toggle(wallet)}
+                    className={`text-xs font-semibold ${wallet.is_active ? "text-teal-100" : "text-gray-400"
+                      }`}
+                  >
+                    {wallet.is_active ? "Attivo" : "Disattivato"}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(wallet.id)}
+                    className="text-gray-400 hover:text-red-400"
+                    title="Elimina"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

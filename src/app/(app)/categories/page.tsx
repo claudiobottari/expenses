@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { Palette } from "lucide-react";
+import { Palette, Trash2 } from "lucide-react";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import type { Category } from "@/lib/types";
 
@@ -51,6 +51,23 @@ export default function CategoriesPage() {
       .update({ is_active: !cat.is_active })
       .eq("id", cat.id);
     await load();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!profile?.household_id) return;
+    if (!window.confirm("Eliminare questa categoria?")) return;
+
+    const { error } = await supabase
+      .from("categories")
+      .delete()
+      .eq("id", id)
+      .eq("household_id", profile.household_id);
+
+    if (error) {
+      alert("Impossibile eliminare: " + error.message);
+    } else {
+      await load();
+    }
   };
 
   if (!profile?.household_id) {
@@ -135,14 +152,22 @@ export default function CategoriesPage() {
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => toggle(cat)}
-                  className={`text-xs font-semibold ${
-                    cat.is_active ? "text-teal-100" : "text-gray-400"
-                  }`}
-                >
-                  {cat.is_active ? "Attiva" : "Disattiva"}
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => toggle(cat)}
+                    className={`text-xs font-semibold ${cat.is_active ? "text-teal-100" : "text-gray-400"
+                      }`}
+                  >
+                    {cat.is_active ? "Attiva" : "Disattiva"}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(cat.id)}
+                    className="text-gray-400 hover:text-red-400"
+                    title="Elimina"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

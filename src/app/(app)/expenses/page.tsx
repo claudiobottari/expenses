@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { useSupabase } from "@/components/providers/supabase-provider";
@@ -11,8 +11,6 @@ type ExpenseWithRelations = Expense & {
   wallet?: { name: string | null };
 };
 
-const today = new Date().toISOString().slice(0, 10);
-
 const formatCurrency = (value: number) =>
   value.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
 
@@ -22,21 +20,12 @@ export default function ExpensesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [filters, setFilters] = useState({
     category: "",
     wallet: "",
     search: "",
   });
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    amount: "",
-    category_id: "",
-    wallet_id: "",
-    date: today,
-    description: "",
-  });
 
   const loadLookups = async () => {
     if (!profile?.household_id) return;
@@ -79,54 +68,6 @@ export default function ExpensesPage() {
     });
   }, [expenses, filters]);
 
-  const resetForm = () => {
-    setForm({
-      amount: "",
-      category_id: categories[0]?.id ?? "",
-      wallet_id: wallets[0]?.id ?? "",
-      date: today,
-      description: "",
-    });
-    setEditingId(null);
-  };
-
-  useEffect(() => {
-    if (categories.length && !form.category_id) {
-      setForm((prev) => ({ ...prev, category_id: categories[0].id }));
-    }
-    if (wallets.length && !form.wallet_id) {
-      setForm((prev) => ({ ...prev, wallet_id: wallets[0].id }));
-    }
-  }, [categories, wallets]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleSave = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!profile?.household_id || !session?.user.id) return;
-    setSaving(true);
-    setActionError(null);
-
-    const payload = {
-      amount: Number(form.amount),
-      category_id: form.category_id,
-      wallet_id: form.wallet_id,
-      date: form.date,
-      description: form.description,
-      currency: "EUR",
-      created_by: session.user.id,
-      household_id: profile.household_id,
-    };
-
-    if (editingId) {
-      await supabase.from("expenses").update(payload).eq("id", editingId);
-    } else {
-      await supabase.from("expenses").insert(payload);
-    }
-
-    await loadExpenses();
-    resetForm();
-    setSaving(false);
-  };
-
   const handleDelete = async (id: string) => {
     if (!profile?.household_id || !session?.user.id) return;
     setActionError(null);
@@ -143,9 +84,6 @@ export default function ExpensesPage() {
     }
 
     await loadExpenses();
-    if (editingId === id) {
-      resetForm();
-    }
   };
 
   if (!profile?.household_id) {
@@ -158,110 +96,6 @@ export default function ExpensesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg shadow-black/30">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.12em] text-teal-100">
-              Aggiungi spesa
-            </p>
-            <p className="text-lg font-semibold text-white">
-              Inserimento rapido in pochi tap
-            </p>
-          </div>
-          {editingId ? (
-            <button
-              onClick={resetForm}
-              className="text-sm text-teal-100 underline"
-            >
-              Nuova spesa
-            </button>
-          ) : null}
-        </div>
-        {actionError ? (
-          <p className="mb-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-200">
-            {actionError}
-          </p>
-        ) : null}
-        <form onSubmit={handleSave} className="grid gap-3 md:grid-cols-4">
-          <label className="space-y-1 md:col-span-1">
-            <span className="text-sm text-gray-200">Importo (€)</span>
-            <input
-              type="number"
-              required
-              inputMode="decimal"
-              step="0.01"
-              className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white outline-none placeholder:text-gray-500 focus:border-teal-400"
-              placeholder="0,00"
-              value={form.amount}
-              onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
-            />
-          </label>
-          <label className="space-y-1 md:col-span-1">
-            <span className="text-sm text-gray-200">Categoria</span>
-            <select
-              className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white outline-none focus:border-teal-400"
-              value={form.category_id}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, category_id: e.target.value }))
-              }
-            >
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1 md:col-span-1">
-            <span className="text-sm text-gray-200">Portafoglio</span>
-            <select
-              className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white outline-none focus:border-teal-400"
-              value={form.wallet_id}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, wallet_id: e.target.value }))
-              }
-            >
-              {wallets.map((wallet) => (
-                <option key={wallet.id} value={wallet.id}>
-                  {wallet.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1 md:col-span-1">
-            <span className="text-sm text-gray-200">Data</span>
-            <input
-              type="date"
-              required
-              className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white outline-none focus:border-teal-400"
-              value={form.date}
-              onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
-            />
-          </label>
-          <label className="md:col-span-3">
-            <span className="text-sm text-gray-200">Nota</span>
-            <textarea
-              rows={2}
-              className="mt-1 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white outline-none placeholder:text-gray-500 focus:border-teal-400"
-              placeholder="Descrizione breve"
-              value={form.description}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, description: e.target.value }))
-              }
-            />
-          </label>
-          <div className="md:col-span-1 md:flex md:flex-col md:justify-end">
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full rounded-xl bg-teal-500 px-4 py-3 font-semibold text-white shadow-lg shadow-teal-500/30 transition hover:bg-teal-400 disabled:opacity-60"
-            >
-              {saving ? "Salvo..." : editingId ? "Aggiorna" : "Aggiungi"}
-            </button>
-          </div>
-        </form>
-      </div>
-
       <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-lg shadow-black/30">
         <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -305,6 +139,12 @@ export default function ExpensesPage() {
           </div>
         </div>
 
+        {actionError ? (
+          <p className="mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-200">
+            {actionError}
+          </p>
+        ) : null}
+
         {loading ? (
           <p className="text-sm text-gray-300">Carico le spese...</p>
         ) : filteredExpenses.length === 0 ? (
@@ -329,21 +169,6 @@ export default function ExpensesPage() {
                   <p className="text-sm font-semibold text-white">
                     {formatCurrency(Number(exp.amount))}
                   </p>
-                  <button
-                    className="text-xs text-teal-100 underline"
-                    onClick={() => {
-                      setEditingId(exp.id);
-                      setForm({
-                        amount: String(exp.amount),
-                        category_id: exp.category_id,
-                        wallet_id: exp.wallet_id,
-                        date: exp.date.slice(0, 10),
-                        description: exp.description || "",
-                      });
-                    }}
-                  >
-                    Modifica
-                  </button>
                   <button
                     className="text-xs text-red-300 underline"
                     onClick={() => handleDelete(exp.id)}
