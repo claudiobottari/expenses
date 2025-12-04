@@ -29,6 +29,7 @@ export default function ExpensesPage() {
     search: "",
   });
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [form, setForm] = useState({
     amount: "",
     category_id: "",
@@ -102,6 +103,7 @@ export default function ExpensesPage() {
     e.preventDefault();
     if (!profile?.household_id || !session?.user.id) return;
     setSaving(true);
+    setActionError(null);
 
     const payload = {
       amount: Number(form.amount),
@@ -123,6 +125,27 @@ export default function ExpensesPage() {
     await loadExpenses();
     resetForm();
     setSaving(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!profile?.household_id || !session?.user.id) return;
+    setActionError(null);
+    const { error } = await supabase
+      .from("expenses")
+      .delete()
+      .eq("id", id)
+      .eq("household_id", profile.household_id)
+      .eq("created_by", session.user.id);
+
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
+
+    await loadExpenses();
+    if (editingId === id) {
+      resetForm();
+    }
   };
 
   if (!profile?.household_id) {
@@ -154,6 +177,11 @@ export default function ExpensesPage() {
             </button>
           ) : null}
         </div>
+        {actionError ? (
+          <p className="mb-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-200">
+            {actionError}
+          </p>
+        ) : null}
         <form onSubmit={handleSave} className="grid gap-3 md:grid-cols-4">
           <label className="space-y-1 md:col-span-1">
             <span className="text-sm text-gray-200">Importo (€)</span>
@@ -315,6 +343,12 @@ export default function ExpensesPage() {
                     }}
                   >
                     Modifica
+                  </button>
+                  <button
+                    className="text-xs text-red-300 underline"
+                    onClick={() => handleDelete(exp.id)}
+                  >
+                    Elimina
                   </button>
                 </div>
               </div>
