@@ -46,6 +46,9 @@ export default function CategoriesPage() {
 
   const toggle = async (cat: Category) => {
     if (!profile?.household_id) return;
+    const action = cat.is_active ? "Disattivare" : "Attivare";
+    if (!window.confirm(`${action} la categoria "${cat.name}"?`)) return;
+
     await supabase
       .from("categories")
       .update({ is_active: !cat.is_active })

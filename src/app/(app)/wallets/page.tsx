@@ -44,6 +44,9 @@ export default function WalletsPage() {
 
   const toggle = async (wallet: Wallet) => {
     if (!profile?.household_id) return;
+    const action = wallet.is_active ? "Disattivare" : "Attivare";
+    if (!window.confirm(`${action} il portafoglio "${wallet.name}"?`)) return;
+
     await supabase
       .from("wallets")
       .update({ is_active: !wallet.is_active })

@@ -70,6 +70,8 @@ export default function ExpensesPage() {
 
   const handleDelete = async (id: string) => {
     if (!profile?.household_id || !session?.user.id) return;
+    if (!window.confirm("Eliminare questa spesa?")) return;
+
     setActionError(null);
     const { error } = await supabase
       .from("expenses")
